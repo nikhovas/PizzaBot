@@ -1,7 +1,6 @@
-import asyncio
-import os
 import sys
 
+import config
 from src.Interfaces import MessengerInterface, DatabaseInterface
 
 
@@ -11,22 +10,17 @@ class Kernel:
 
     def __init__(self):
         from src.Messengers.Telegram import TelegramMessenger
-        token = os.getenv("TOKEN")
-        self.messenger = TelegramMessenger(self, token)
+        self.messenger = TelegramMessenger(self, config.TOKEN)
 
         from src.Database import Database
         self.database = Database(self)
 
     def run(self):
-        mode = os.getenv("MODE")
-        token = os.getenv("TOKEN")
-
-        if mode == "dev":
-            asyncio.get_event_loop().create_task(self.messenger.start_listening())
-        elif mode == "prod":
-            port = int(os.environ.get("PORT", "8443"))
-            heroku_app_name = os.environ.get("HEROKU_APP_NAME")
-            self.messenger.start_webhook(f"/{token}", "0.0.0.0", port, f"https://{heroku_app_name}.herokuapp.com/{token}")
+        if config.MODE == "dev":
+            self.messenger.start_listening()
+        elif config.MODE == "prod":
+            self.messenger.start_webhook(f"/{config.TOKEN}", "0.0.0.0", config.PORT,
+                                         f"https://{config.HEROKU_APP_NAME}.herokuapp.com/{config.TOKEN}")
         else:
             print("no mode")
             sys.exit(1)

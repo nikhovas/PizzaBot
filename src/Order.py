@@ -1,14 +1,10 @@
+from transitions.extensions.asyncio import AsyncMachine, AsyncTimeout
 from transitions.extensions.states import add_state_features
 
-from src.Interfaces import MessageSender
-from transitions.extensions.asyncio import AsyncMachine, AsyncTimeout
-import asyncio
-
+import config
+from src.Interfaces import MessageSenderInterface
 from src.Kernel import Kernel
 from src.OrderDetails import *
-
-
-TIMEOUT = 2
 
 
 @add_state_features(AsyncTimeout)
@@ -17,18 +13,16 @@ class CustomStateMachine(AsyncMachine):
 
 
 class Order:
-    def __del__(self):
-        print("here")
 
-    def __init__(self, dialog: MessageSender, kernel: Kernel):
+    def __init__(self, dialog: MessageSenderInterface, kernel: Kernel):
         states = [
-            dict(name='initial_in', timeout=TIMEOUT, on_timeout='timeout_trigger'),
+            dict(name='initial_in', timeout=config.TIMEOUT, on_timeout='timeout_trigger'),
             dict(name='initial_out'),
-            dict(name='selection_in', timeout=TIMEOUT, on_timeout='timeout_trigger'),
+            dict(name='selection_in', timeout=config.TIMEOUT, on_timeout='timeout_trigger'),
             dict(name='selection_out'),
-            dict(name='payment_in', timeout=TIMEOUT, on_timeout='timeout_trigger'),
+            dict(name='payment_in', timeout=config.TIMEOUT, on_timeout='timeout_trigger'),
             dict(name='payment_out'),
-            dict(name='check_in', timeout=TIMEOUT, on_timeout='timeout_trigger'),
+            dict(name='check_in', timeout=config.TIMEOUT, on_timeout='timeout_trigger'),
             dict(name='check_out'),
             dict(name='order_sent'),
             dict(name='another_request'),
@@ -50,7 +44,6 @@ class Order:
                 before=self.to_selection_stage
             ),
 
-
             dict(
                 trigger="proceed",
                 source='selection_in',
@@ -65,7 +58,6 @@ class Order:
                 before=[self.send_error_parse_message, self.to_selection_stage],
                 conditions='parse_error'
             ),
-
 
             dict(
                 trigger="go",
@@ -89,7 +81,6 @@ class Order:
                 conditions='parse_error'
             ),
 
-
             dict(
                 trigger="go",
                 source='payment_out',
@@ -108,16 +99,17 @@ class Order:
                 trigger="go",
                 source='check_out',
                 dest='check_in',
-                 before=[self.send_error_parse_message, self.to_check_stage],
+                before=[self.send_error_parse_message, self.to_check_stage],
                 conditions='parse_error'
             ),
 
             # if not confirmed
-            dict(trigger="go",
-                 source='check_out',
-                 dest='selection_in',
-                 before=self.to_selection_stage,
-                 unless='is_confirmed'
+            dict(
+                trigger="go",
+                source='check_out',
+                dest='selection_in',
+                before=self.to_selection_stage,
+                unless='is_confirmed'
             ),
 
             # if confirmed
@@ -217,9 +209,7 @@ class Order:
         await self.dialog.send_message("Текст не распознан, напишите еще раз")
 
     async def after_stage(self, *args):
-        # asyncio.get_event_loop().create_task(self.go())
         await self.go()
-
 
     async def timeout_handler(self):
         await self.dialog.send_message('Истекло время ожидания.')

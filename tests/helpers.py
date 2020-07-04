@@ -1,10 +1,10 @@
 import asyncio
+
 from src import OrderDetails
-from src.Interfaces import MessageSender, DatabaseInterface
-from src.Order import Order
+from src.Interfaces import MessageSenderInterface, DatabaseInterface
 
 
-class DemoMessageSender(MessageSender):
+class DemoMessageSender(MessageSenderInterface):
     def __init__(self):
         self.queue = asyncio.Queue()
         self.ended = False

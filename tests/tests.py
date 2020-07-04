@@ -1,5 +1,7 @@
+import config
+from src.Order import Order
+from src.OrderDetails import *
 from tests.helpers import *
-import pytest
 
 
 class TestOrder:
@@ -32,6 +34,7 @@ class TestOrder:
             assert msg == 'Для следующего заказа напишите любое слово.'
 
             order_in_database = kernel.database.queue.get_nowait()
+            assert order_in_database == (PizzaSizes.BIG, PaymentTypes.CARD)
 
         loop.run_until_complete(do_test())
 
@@ -58,8 +61,7 @@ class TestOrder:
         loop.run_until_complete(do_test())
 
     def test_timeout(self):
-        import src.Order
-        src.Order.TIMEOUT = 2
+        config.TIMEOUT = 2
 
         loop = asyncio.get_event_loop()
         sender = DemoMessageSender()

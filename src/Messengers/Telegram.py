@@ -1,19 +1,16 @@
 from aiogram import Bot, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import Dispatcher
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils import executor
-import asyncio
-
 from aiogram.utils.executor import start_webhook
 
-from src.Interfaces import MessengerInterface, MessageSender
-from src.Order import Order
+from src.Interfaces import MessengerInterface, MessageSenderInterface
 from src.Kernel import Kernel
+from src.Order import Order
 
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-
-class TelegramDialog(MessageSender):
+class TelegramMessageSender(MessageSenderInterface):
     def __init__(self, chat_id: int, bot: Bot, chats: dict):
         self.chat_id = chat_id
         self.bot = bot
@@ -53,11 +50,9 @@ class TelegramMessenger(MessengerInterface):
     async def handler(self, message: types.Message):
         order = self.chat_dict.get(message.chat.id)
         if order is None:
-            order = Order(TelegramDialog(message.chat.id, self.bot, self.chat_dict), self.kernel)
+            order = Order(TelegramMessageSender(message.chat.id, self.bot, self.chat_dict), self.kernel)
             self.chat_dict[message.chat.id] = order
-        # asyncio.get_event_loop().create_task(order.proceed(message.text))
         await order.proceed(message.text)
-
 
     async def on_startup(self, dp):
         await self.bot.set_webhook(self.webhook_url)

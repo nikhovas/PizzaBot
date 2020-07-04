@@ -1,4 +1,5 @@
 from abc import ABC
+
 from src import OrderDetails
 
 
@@ -7,7 +8,7 @@ class DatabaseInterface(ABC):
         pass
 
 
-class MessageSender(ABC):
+class MessageSenderInterface(ABC):
     async def send_message(self, msg: str, buttons=None):
         pass
 
