@@ -80,6 +80,3 @@ class TestOrder:
             assert msg == 'Для следующего заказа напишите любое слово.'
 
         loop.run_until_complete(do_test())
-
-
-
